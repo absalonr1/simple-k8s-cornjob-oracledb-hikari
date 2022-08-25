@@ -1,0 +1,34 @@
+apiVersion: batch/v1beta1
+kind: CronJob
+metadata:
+  name: test-cron-job-datadog
+spec:
+  schedule: "*/3 * * * *"
+  
+  successfulJobsHistoryLimit: 10
+  failedJobsHistoryLimit: 10
+  #concurrencyPolicy: Allow
+  jobTemplate:
+    spec:
+      #There are situations where you want to fail a Job after some amount of retries due to a logical error in configuration etc. 
+      #To do so, set .spec.backoffLimit to specify the number of retries before considering a Job as failed. The back-off limit is set 
+      #by default to 6. Failed Pods associated with the Job are recreated by the Job controller with an exponential back-off delay (10s, 20s, 40s ...) 
+      #capped at six minutes. The back-off count is reset when a Job's Pod is deleted or successful without any other Pods for the Job failing around that time.
+      backoffLimit: 3
+      # Clean up finished jobs automatically
+      # will be eligible to be automatically deleted, 100 seconds after it finishes.
+      ttlSecondsAfterFinished: 100
+      template:
+        spec:
+          containers:
+          - name: test-cron-job-datadog
+            image: absalon1000rr/test-cron-job-datadog:v1
+            imagePullPolicy: IfNotPresent
+            env:
+            - name: ERROR_ENVV
+              value: "1"
+#            command:
+#            - /bin/sh
+#            - -c
+#            - date; echo Hello from the Kubernetes cluster
+          restartPolicy: OnFailure
